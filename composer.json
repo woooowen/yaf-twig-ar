@@ -1,0 +1,11 @@
+{
+    "require": {
+        "monolog/monolog" : "*",
+        "swiftmailer/swiftmailer" : "*",
+        "twig/twig": "~1.0"
+    },
+    "repositories": [
+        {"type": "composer", "url": "http://packagist.phpcomposer.com"},
+        {"packagist": false}
+    ]
+}
