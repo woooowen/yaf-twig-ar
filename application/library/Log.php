@@ -30,7 +30,6 @@ class Log
 
     public function __call($func, $args)
     {
-        var_dump($func);
         return call_user_func_array([$this->_logger, $func], $args);
     }
     public static function getConfig($name)
