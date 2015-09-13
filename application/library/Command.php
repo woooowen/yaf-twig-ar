@@ -109,7 +109,7 @@ class Command
         $this->prepare();
         $this->pdoStatement->execute($this->_params);
         $end = microtime(true);
-        Log::getInstance('mysql')->addInfo($this->_sql, ['cost_time' => ($end - $start) * 1000, 'params' => $this->_params]);
+        Log::getInstance('mysql')->info($this->_sql, ['cost_time' => ($end - $start) * 1000, 'params' => $this->_params]);
     }
 
     protected function queryInternal($method, $fetchMode = null)
