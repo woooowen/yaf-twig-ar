@@ -8,12 +8,12 @@ class ActiveRecord implements ArrayAccess, JsonSerializable
     const EVENT_AFTER_UPDATE = 'afterUpdate';
     const EVENT_AFTER_DELETE = 'afterDelete';
 
-    public static $table_name = '';
+    public static $tableName = '';
     public static $name = '';
-    public static $db_conf = '';
+    public static $dbConf = '';
 
     protected $_fields = [];
-    protected $_old_fields = [];
+    protected $_oldFields = [];
     protected $_events = [];
 
     public function __construct()
@@ -23,12 +23,12 @@ class ActiveRecord implements ArrayAccess, JsonSerializable
 
     public static function getTableSchema()
     {
-        return TableSchema::load(static::$table_name);
+        return TableSchema::load(static::$tableName);
     }
 
     public static function getTableName()
     {
-        return static::$table_name;
+        return static::$tableName;
     }
 
     public static function getDbName()
@@ -37,22 +37,22 @@ class ActiveRecord implements ArrayAccess, JsonSerializable
     }
 
     public static function getColumns() {
-        return TableSchema::getColumns(static::$table_name);
+        return TableSchema::getColumns(static::$tableName);
     }
 
     public static function getPrimaryKey()
     {
-        return TableSchema::getPrimaryKey(static::$table_name);
+        return TableSchema::getPrimaryKey(static::$tableName);
     }
 
     public static function isAutoIncrement()
     {
-        return TableSchema::isAutoIncrement(static::$table_name);
+        return TableSchema::isAutoIncrement(static::$tableName);
     }
 
     public static function getDb()
     {
-        return ConnectionManager::getConnection(static::$db_conf);
+        return ConnectionManager::getConnection(static::$dbConf);
     }
 
     public static function findBySql($sql, $params = [], $asArray = false, $columns = [])
@@ -98,7 +98,7 @@ class ActiveRecord implements ArrayAccess, JsonSerializable
                 $record->_fields[$name] = $value;
             }
         }
-        $record->_old_fields = $record->_fields;
+        $record->_oldFields = $record->_fields;
     }
 
     public function getLastInsertID()
@@ -145,7 +145,7 @@ class ActiveRecord implements ArrayAccess, JsonSerializable
         }
         $this->setDefaultValue();
         $this->afterSave(true);
-        $this->_old_fields = $this->_fields;
+        $this->_oldFields = $this->_fields;
         return true;
     }
 
@@ -202,7 +202,7 @@ class ActiveRecord implements ArrayAccess, JsonSerializable
     public function getDirtyFields()
     {
         $dirty_fields = [];
-        if (!$this->_old_fields) {
+        if (!$this->_oldFields) {
             foreach ($this->_fields as $name => $value) {
                 if (!is_null($value)) {
                     $dirty_fields[$name] = $value;
@@ -210,7 +210,7 @@ class ActiveRecord implements ArrayAccess, JsonSerializable
             }
         } else {
             foreach ($this->_fields as $name => $value) {
-                if (!is_null($value) && (!array_key_exists($name, $this->_old_fields) || $value !== $this->_old_fields[$name])) {
+                if (!is_null($value) && (!array_key_exists($name, $this->_oldFields) || $value !== $this->_oldFields[$name])) {
                     $dirty_fields[$name] = $value;
                 }
             }
@@ -241,7 +241,7 @@ class ActiveRecord implements ArrayAccess, JsonSerializable
             return 0;
         }
         $pk = static::getPrimaryKey();
-        $rows = static::updateAll($values, [$pk => $this->_old_fields[$pk]]);
+        $rows = static::updateAll($values, [$pk => $this->_oldFields[$pk]]);
         $this->afterSave(false);
         return $rows;
     }
@@ -252,7 +252,7 @@ class ActiveRecord implements ArrayAccess, JsonSerializable
         if ($this->beforeDelete()) {
             $pk = static::getPrimaryKey();
             $result = static::deleteAll([$pk => $this->_fields[$pk]]);
-            $this->_old_fields = null;
+            $this->_oldFields = null;
             $this->afterDelete();
         }
 
@@ -261,7 +261,7 @@ class ActiveRecord implements ArrayAccess, JsonSerializable
 
     public function isNewRecord()
     {
-        return empty($this->_old_fields);
+        return empty($this->_oldFields);
     }
 
     public function beforeSave($insert)
