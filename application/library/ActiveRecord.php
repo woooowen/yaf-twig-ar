@@ -37,14 +37,17 @@ class ActiveRecord implements ArrayAccess, JsonSerializable
     }
 
     public static function getColumns() {
-        $schema = static::getTableSchema();
-        return $schema->columns;
+        return TableSchema::getColumns(static::$table_name);
     }
 
     public static function getPrimaryKey()
     {
-        $schema = static::getTableSchema();
-        return $schema->primaryKey;
+        return TableSchema::getPrimaryKey(static::$table_name);
+    }
+
+    public static function isAutoIncrement()
+    {
+        return TableSchema::isAutoIncrement(static::$table_name);
     }
 
     public static function getDb()
@@ -88,7 +91,7 @@ class ActiveRecord implements ArrayAccess, JsonSerializable
 
     public static function populateRecord($record, $row)
     {
-        $columns = static::getTableSchema()->columns;
+        $columns = static::getColumns();
         foreach ($row as $name => $value) {
             if (isset($columns[$name])) {
                 $row[$name] = ColumnType::cast($columns[$name]['type'], $value);
@@ -109,7 +112,7 @@ class ActiveRecord implements ArrayAccess, JsonSerializable
 
     public function setDefaultValue()
     {
-        foreach (static::getTableSchema()->columns as $column => $define) {
+        foreach (static::getColumns() as $column => $define) {
             if (!is_null($define['default']) && is_null($this->_fields[$column])) {
                 $this->_fields[$column] = $define['default'];
             }
@@ -131,11 +134,11 @@ class ActiveRecord implements ArrayAccess, JsonSerializable
             return false;
         }
         $schema = static::getTableSchema();
-        $pk = $schema->primaryKey;
+        $pk = $schema['primaryKey'];
         if (!isset($this->_fields[$pk])) {
-            if ($schema->autoIncrement) {
+            if ($schema['autoIncrement']) {
                 $value_of_pk = $this->getLastInsertID();
-                $this->setField($pk, ColumnType::cast($schema->columns[$pk]['type'], $value_of_pk));
+                $this->setField($pk, ColumnType::cast($schema['columns'][$pk]['type'], $value_of_pk));
             } else {
                 throw Exception('primary key is not set');
             }

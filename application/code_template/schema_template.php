@@ -1,13 +1,12 @@
 <?php
 echo "<?php\n";
 ?>
-class <?= $schema_name?> extends TableSchema
-{
-    public $dbName = '<?=$dbName?>';
-    public $name = '<?=$name?>';
-    public $primaryKey = '<?=$primaryKey?>';
-    public $autoIncrement = '<?=$autoIncrement?>';
-    public $columns = [
+return [
+    'database' => '<?=$dbName?>';
+    'table' => '<?=$name?>';
+    'primaryKey' => '<?=$primaryKey?>';
+    'autoIncrement' => '<?=$autoIncrement?>';
+    'columns' => [
 <?php
 foreach ($columns as $column => $defines) {
     echo "\t\t\t\t'", $column, "'  => [";
@@ -29,4 +28,4 @@ foreach ($columns as $column => $defines) {
 }
 ?>
             ];
-}
+];

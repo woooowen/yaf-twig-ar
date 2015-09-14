@@ -1,12 +1,6 @@
 <?php
 class TableSchema
 {
-    public $dbName = '';
-    public $name = '';
-    public $primaryKey = '';
-    public $autoIncrement = '';
-    public $columns = [];
-
     private static $tables = [];
 
     public static function load($table)
@@ -21,7 +15,19 @@ class TableSchema
     public static function getColumns($table)
     {
         $schema = self::load($table);
-        return $schema->columns;
+        return $schema['columns'];
+    }
+
+    public static function getPrimaryKey($table)
+    {
+        $schema = self::load($table);
+        return $schema['primaryKey'];
+    }
+
+    public static function isAutoIncrement($table)
+    {
+        $schema = self::load($table);
+        return $schema['autoIncrement'];
     }
 
     public static function table2SchemaName($table) {
