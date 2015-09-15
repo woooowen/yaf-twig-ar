@@ -45,7 +45,7 @@ class QueryBuilder
         foreach ($columns as $name => $value) {
             $params[] = ColumnType::cast($columnSchemas[$name]['type'], $value);
         }
-        return 'INSERT INTO ' . $this->db->pdo->quote($table)
+        return 'INSERT INTO ' . $this->quote($table)
             . ' (' . implode(', ', [[$this->db->pdo, 'quote'], array_keys($columns)]) . ')'
             . ' VALUES (' . implode(', ', array_fill(0, count($columns), '?')) . ')';
     }
@@ -63,9 +63,14 @@ class QueryBuilder
                 $params[] = ColumnType::cast($column, $value);
             }
         }
-        return 'INSERT INTO ' . $this->db->pdo->quote($table)
+        return 'INSERT INTO ' . $this->quote($table)
             . ' (' . implode(', ', array_map([$this->db->pdo, 'quote'], $columns))
             . ') VALUES ' . implode(', ', array_fill(0, count($rows), '(' . implode(', ', array_fill(0, count($columns), '?')) . ')'));
+    }
+
+    public function quote($str)
+    {
+        return "`{$str}`";
     }
 
     public function update($table, $columns, $condition, &$params)
@@ -75,8 +80,8 @@ class QueryBuilder
         foreach ($columns as $name => $value) {
             $params[] = ColumnType::cast($columnSchemas[$name]['type'], $value);
         }
-        $sql = 'UPDATE ' . $this->db->pdo->quote($table . ' SET '
-               . implode(', ', array_map(function($v) {$v = $this->db->pdo->quote($v); $return "{$v} = ?";}, $names));
+        $sql = 'UPDATE ' . $this->quote($table . ' SET '
+               . implode(', ', array_map(function($v) {$v = $this->quote($v); $return "{$v} = ?";}, array_keys($columns)));
         $where = $this->buildWhere($condition, $part_params);
         $params = array_merge($params, $part_params);
         return $where === '' ? $sql : $sql . ' ' . $where;
@@ -84,7 +89,7 @@ class QueryBuilder
 
     public function delete($table, $condition, &$params)
     {
-        $sql = 'DELETE FROM ' . $this->db->pdo->quote($table);
+        $sql = 'DELETE FROM ' . $this->quote($table);
         $where = $this->buildWhere($condition, $params);
         return $where === '' ? $sql : $sql . ' ' . $where;
     }
@@ -107,7 +112,7 @@ class QueryBuilder
         if (empty($table)) {
             return '';
         }
-        $table = $this->db->pdo->quote($table);
+        $table = $this->quote($table);
         return 'FROM ' . $table;
     }
 
@@ -142,7 +147,7 @@ class QueryBuilder
         }
         $orders = [];
         foreach ($columns as $name => $direction) {
-            $name = $this->db->pdo->quote($name);
+            $name = $this->quote($name);
             $orders[] = "{$name} {$direction}";
         }
         return 'ORDER BY ' . implode(', ', $orders);
@@ -170,7 +175,7 @@ class QueryBuilder
         $params = $part_params = $parts = [];
         foreach ($condition as $column => $value) {
             if (!is_array($value)) {
-                $column = $this->db->pdo->quote($column);
+                $column = $this->quote($column);
                 $parts[] = "{$column} = ?";
                 $params[] = $value;
             } else {
@@ -222,20 +227,20 @@ class QueryBuilder
 
     protected function buildRelationalCondition($relation, $column)
     {
-        $column = $this->db->pdo->quote($column);
+        $column = $this->quote($column);
         return "{$column} {$relation} ?";
     }
 
     public function buildBetweenCondition($column, $operands, &$params)
     {
-        $column = $this->db->pdo->quote($column);
+        $column = $this->quote($column);
         $params = array_values($operands);
         return "{$column} BETWEEN ? AND ?";
     }
 
     public function buildNotBetweenCondition($column, $operands, &$params)
     {
-        $column = $this->db->pdo->quote($column);
+        $column = $this->quote($column);
         $params = array_values($operands);
         return "{$column} NOT BETWEEN ? AND ?";
     }
@@ -256,7 +261,7 @@ class QueryBuilder
         if (empty($operand)) {
             return '';
         }
-        $column = $this->db->pdo->quote($column);
+        $column = $this->quote($column);
         $params = array_values($operand);
         if (count($operand) === 1) {
             $operator = $in ? '=' : '!=';
@@ -269,14 +274,14 @@ class QueryBuilder
 
     public function buildLikeCondition($column, $operands, &$params)
     {
-        $column = $this->db->pdo->quote($column);
+        $column = $this->quote($column);
         $params = $operands[0];
         return "{$column} LIKE ?";
     }
 
     public function buildNotLikeCondition($column, $operands, &$params)
     {
-        $column = $this->db->pdo->quote($column);
+        $column = $this->quote($column);
         $params = $operands[0];
         return "{$column} NOT LIKE ?";
     }
