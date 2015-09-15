@@ -19,7 +19,6 @@ function main($argc, $argv) {
     $columns = [];
     $primaryKey = '';
     $autoIncrement = '';
-    $schema_name = TableSchema::table2SchemaName($name);
     foreach ($result as $define) {
         $columnName = $define['Field'];
         if ($define['Extra'] === 'auto_increment') {
@@ -49,6 +48,6 @@ function main($argc, $argv) {
     ob_start();
     require(APPLICATION_PATH . '/application/code_template/schema_template.php');
     $content = ob_get_clean();
-    $dst = APPLICATION_PATH . '/application/library/Schema/' . implode('', array_map('ucfirst', explode('_', $name))) . '.php';
+    $dst = APPLICATION_PATH . '/application/schemas/' . $name . '.php';
     file_put_contents($dst, $content);
 }

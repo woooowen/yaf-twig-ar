@@ -2,10 +2,10 @@
 echo "<?php\n";
 ?>
 return [
-    'database' => '<?=$dbName?>';
-    'table' => '<?=$name?>';
-    'primaryKey' => '<?=$primaryKey?>';
-    'autoIncrement' => '<?=$autoIncrement?>';
+    'database' => '<?=$dbName?>',
+    'table' => '<?=$name?>',
+    'primaryKey' => '<?=$primaryKey?>',
+    'autoIncrement' => '<?=$autoIncrement?>',
     'columns' => [
 <?php
 foreach ($columns as $column => $defines) {
@@ -27,5 +27,5 @@ foreach ($columns as $column => $defines) {
     echo "],\n";
 }
 ?>
-            ];
+            ],
 ];

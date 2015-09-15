@@ -6,8 +6,7 @@ class TableSchema
     public static function load($table)
     {
         if (!isset(self::$tables[$table])) {
-            $schema_name = self::table2SchemaName($table);
-            self::$tables[$table] = new $schema_name();
+            self::$tables[$table] = require(APPLICATION_PATH . "/application/schemas/{$table}.php");
         }
         return self::$tables[$table];
     }
@@ -28,10 +27,6 @@ class TableSchema
     {
         $schema = self::load($table);
         return $schema['autoIncrement'];
-    }
-
-    public static function table2SchemaName($table) {
-        return 'Schema_' . implode('', array_map('ucfirst', explode('_', $table)));
     }
 
     public static function db2DbName($db) {
