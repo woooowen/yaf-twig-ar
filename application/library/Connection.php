@@ -65,18 +65,6 @@ class Connection
         return new QueryBuilder($this);
     }
 
-    public function quoteValue($str)
-    {
-        if (!is_string($str)) {
-            return $str;
-        }
-        if (($value = $this->getPdo()->quote($str)) !== false) {
-            return $value;
-        } else {
-            return "'" . addcslashes(str_replace("'", "''", $str), "\000\n\r\\\032") . "'";
-        }
-    }
-
     public function getPdo()
     {
         $this->open();
