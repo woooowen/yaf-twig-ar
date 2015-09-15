@@ -45,8 +45,8 @@ class QueryBuilder
         foreach ($columns as $name => $value) {
             $params[] = ColumnType::cast($columnSchemas[$name]['type'], $value);
         }
-        return 'INSERT INTO ' . $this->quoteMeta($table)
-            . ' (' . implode(', ', [[$this, 'quoteMeta'], array_keys($columns)]) . ')'
+        return 'INSERT INTO ' . $table
+            . ' (' . implode(', ', array_keys($columns)) . ')'
             . ' VALUES (' . implode(', ', array_fill(0, count($columns), '?')) . ')';
     }
 
@@ -63,14 +63,9 @@ class QueryBuilder
                 $params[] = ColumnType::cast($column, $value);
             }
         }
-        return 'INSERT INTO ' . $this->quoteMeta($table)
-            . ' (' . implode(', ', array_map([$this, 'quoteMeta'], $columns))
+        return 'INSERT INTO ' . $table
+            . ' (' . implode(', ', $columns)
             . ') VALUES ' . implode(', ', array_fill(0, count($rows), '(' . implode(', ', array_fill(0, count($columns), '?')) . ')'));
-    }
-
-    protected function quoteMeta($str)
-    {
-        return "`{$str}`";
     }
 
     public function update($table, $columns, $condition, &$params)
@@ -80,8 +75,10 @@ class QueryBuilder
         foreach ($columns as $name => $value) {
             $params[] = ColumnType::cast($columnSchemas[$name]['type'], $value);
         }
-        $sql = 'UPDATE ' . $this->quoteMeta($table . ' SET '
-               . implode(', ', array_map(function($v) {$v = $this->quoteMeta($v); $return "{$v} = ?";}, array_keys($columns)));
+        $sql = 'UPDATE ' . $table . ' SET '
+            . implode(', ', array_map(function($v) {
+                                        return "{$v} = ?";
+                                        }, array_keys($columns)));
         $where = $this->buildWhere($condition, $part_params);
         $params = array_merge($params, $part_params);
         return $where === '' ? $sql : $sql . ' ' . $where;
@@ -89,7 +86,7 @@ class QueryBuilder
 
     public function delete($table, $condition, &$params)
     {
-        $sql = 'DELETE FROM ' . $this->quoteMeta($table);
+        $sql = 'DELETE FROM ' . $table;
         $where = $this->buildWhere($condition, $params);
         return $where === '' ? $sql : $sql . ' ' . $where;
     }
@@ -103,7 +100,7 @@ class QueryBuilder
         if (empty($columns)) {
             return $select . ' * ';
         }
-        $select =  $select . ' ' . implode(', ', array_map([$this, 'quoteMeta'], $columns));
+        $select =  $select . ' ' . implode(', ', $columns);
         return $lockOption ? $select . ' '. $lockOption : $select;
     }
 
@@ -112,7 +109,6 @@ class QueryBuilder
         if (empty($table)) {
             return '';
         }
-        $table = $this->quoteMeta($table);
         return 'FROM ' . $table;
     }
 
@@ -147,7 +143,6 @@ class QueryBuilder
         }
         $orders = [];
         foreach ($columns as $name => $direction) {
-            $name = $this->quoteMeta($name);
             $orders[] = "{$name} {$direction}";
         }
         return 'ORDER BY ' . implode(', ', $orders);
@@ -167,7 +162,7 @@ class QueryBuilder
 
     public function buildColumns(array $columns)
     {
-        return implode(', ', array_map([$this, 'quoteMeta'], $columns));
+        return implode(', ', $columns);
     }
 
     public function buildCondition($condition, &$params)
@@ -175,7 +170,6 @@ class QueryBuilder
         $params = $part_params = $parts = [];
         foreach ($condition as $column => $value) {
             if (!is_array($value)) {
-                $column = $this->quoteMeta($column);
                 $parts[] = "{$column} = ?";
                 $params[] = $value;
             } else {
@@ -227,20 +221,17 @@ class QueryBuilder
 
     protected function buildRelationalCondition($relation, $column)
     {
-        $column = $this->quoteMeta($column);
         return "{$column} {$relation} ?";
     }
 
     public function buildBetweenCondition($column, $operands, &$params)
     {
-        $column = $this->quoteMeta($column);
         $params = array_values($operands);
         return "{$column} BETWEEN ? AND ?";
     }
 
     public function buildNotBetweenCondition($column, $operands, &$params)
     {
-        $column = $this->quoteMeta($column);
         $params = array_values($operands);
         return "{$column} NOT BETWEEN ? AND ?";
     }
@@ -261,7 +252,6 @@ class QueryBuilder
         if (empty($operand)) {
             return '';
         }
-        $column = $this->quoteMeta($column);
         $params = array_values($operand);
         if (count($operand) === 1) {
             $operator = $in ? '=' : '!=';
@@ -274,14 +264,12 @@ class QueryBuilder
 
     public function buildLikeCondition($column, $operands, &$params)
     {
-        $column = $this->quoteMeta($column);
         $params = $operands[0];
         return "{$column} LIKE ?";
     }
 
     public function buildNotLikeCondition($column, $operands, &$params)
     {
-        $column = $this->quoteMeta($column);
         $params = $operands[0];
         return "{$column} NOT LIKE ?";
     }
