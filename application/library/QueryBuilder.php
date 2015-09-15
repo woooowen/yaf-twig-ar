@@ -38,22 +38,16 @@ class QueryBuilder
         return [$sql, $params];
     }
 
-    protected function getColumnNamesAndParams($table, $columns) {
+    public function insert($table, $columns, &$params)
+    {
         $columnSchemas = TableSchema::getColumns($table);
-        $names = array_keys($columns);
         $params = [];
         foreach ($columns as $name => $value) {
             $params[] = ColumnType::cast($columnSchemas[$name]['type'], $value);
         }
-        return [$names, $params];
-    }
-
-    public function insert($table, $columns, &$params)
-    {
-        list($names, $params) = $this->getColumnNamesAndParams($table, $columns);
-        return 'INSERT INTO ' . $table
-            . ' (' . implode(', ', $names) . ')'
-            . ' VALUES (' . implode(', ', array_fill(0, count($names), '?')) . ')';
+        return 'INSERT INTO ' . $this->db->pdo->quote($table)
+            . ' (' . implode(', ', [[$this->db->pdo, 'quote'], array_keys($columns)]) . ')'
+            . ' VALUES (' . implode(', ', array_fill(0, count($columns), '?')) . ')';
     }
 
     public function batchInsert($table, $rows, &$params)
@@ -69,16 +63,20 @@ class QueryBuilder
                 $params[] = ColumnType::cast($column, $value);
             }
         }
-        return 'INSERT INTO ' . $table
-            . ' (' . implode(', ', $columns)
+        return 'INSERT INTO ' . $this->db->pdo->quote($table)
+            . ' (' . implode(', ', array_map([$this->db->pdo, 'quote'], $columns))
             . ') VALUES ' . implode(', ', array_fill(0, count($rows), '(' . implode(', ', array_fill(0, count($columns), '?')) . ')'));
     }
 
     public function update($table, $columns, $condition, &$params)
     {
-        list($names, $params) = $this->getColumnNamesAndParams($table, $columns);
-        $part_params = [];
-        $sql = 'UPDATE ' . $table . ' SET ' . implode(', ', array_map(function($v) {return "{$v} = ?";}, $names));
+        $params = $part_params = [];
+        $columnSchemas = TableSchema::getColumns($table);
+        foreach ($columns as $name => $value) {
+            $params[] = ColumnType::cast($columnSchemas[$name]['type'], $value);
+        }
+        $sql = 'UPDATE ' . $this->db->pdo->quote($table . ' SET '
+               . implode(', ', array_map(function($v) {$v = $this->db->pdo->quote($v); $return "{$v} = ?";}, $names));
         $where = $this->buildWhere($condition, $part_params);
         $params = array_merge($params, $part_params);
         return $where === '' ? $sql : $sql . ' ' . $where;
@@ -86,7 +84,7 @@ class QueryBuilder
 
     public function delete($table, $condition, &$params)
     {
-        $sql = 'DELETE FROM ' . $table;
+        $sql = 'DELETE FROM ' . $this->db->pdo->quote($table);
         $where = $this->buildWhere($condition, $params);
         return $where === '' ? $sql : $sql . ' ' . $where;
     }
@@ -100,7 +98,7 @@ class QueryBuilder
         if (empty($columns)) {
             return $select . ' * ';
         }
-        $select =  $select . ' ' . implode(', ', $columns);
+        $select =  $select . ' ' . implode(', ', array_map([$this->db->pdo, 'quote'], $columns));
         return $lockOption ? $select . ' '. $lockOption : $select;
     }
 
@@ -109,6 +107,7 @@ class QueryBuilder
         if (empty($table)) {
             return '';
         }
+        $table = $this->db->pdo->quote($table);
         return 'FROM ' . $table;
     }
 
@@ -143,6 +142,7 @@ class QueryBuilder
         }
         $orders = [];
         foreach ($columns as $name => $direction) {
+            $name = $this->db->pdo->quote($name);
             $orders[] = "{$name} {$direction}";
         }
         return 'ORDER BY ' . implode(', ', $orders);
@@ -162,7 +162,7 @@ class QueryBuilder
 
     public function buildColumns(array $columns)
     {
-        return implode(', ', $columns);
+        return implode(', ', array_map([$this->db->pdo, 'quote'], $columns));
     }
 
     public function buildCondition($condition, &$params)
@@ -170,6 +170,7 @@ class QueryBuilder
         $params = $part_params = $parts = [];
         foreach ($condition as $column => $value) {
             if (!is_array($value)) {
+                $column = $this->db->pdo->quote($column);
                 $parts[] = "{$column} = ?";
                 $params[] = $value;
             } else {
@@ -221,17 +222,20 @@ class QueryBuilder
 
     protected function buildRelationalCondition($relation, $column)
     {
+        $column = $this->db->pdo->quote($column);
         return "{$column} {$relation} ?";
     }
 
     public function buildBetweenCondition($column, $operands, &$params)
     {
+        $column = $this->db->pdo->quote($column);
         $params = array_values($operands);
         return "{$column} BETWEEN ? AND ?";
     }
 
     public function buildNotBetweenCondition($column, $operands, &$params)
     {
+        $column = $this->db->pdo->quote($column);
         $params = array_values($operands);
         return "{$column} NOT BETWEEN ? AND ?";
     }
@@ -252,6 +256,7 @@ class QueryBuilder
         if (empty($operand)) {
             return '';
         }
+        $column = $this->db->pdo->quote($column);
         $params = array_values($operand);
         if (count($operand) === 1) {
             $operator = $in ? '=' : '!=';
@@ -264,12 +269,14 @@ class QueryBuilder
 
     public function buildLikeCondition($column, $operands, &$params)
     {
+        $column = $this->db->pdo->quote($column);
         $params = $operands[0];
         return "{$column} LIKE ?";
     }
 
     public function buildNotLikeCondition($column, $operands, &$params)
     {
+        $column = $this->db->pdo->quote($column);
         $params = $operands[0];
         return "{$column} NOT LIKE ?";
     }
