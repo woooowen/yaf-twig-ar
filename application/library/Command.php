@@ -73,37 +73,35 @@ class Command
     {
         $params = [];
         $sql = $this->db->getQueryBuilder()->insert($table, $columns, $params);
-        return $this->setSql($sql)->bindValues($params);
+        $this->setSql($sql)->bindValues($params)->execute();
+        return $this->pdoStatement->rowCount();
     }
 
     public function batchInsert($table, $rows)
     {
         $params = [];
         $sql = $this->db->getQueryBuilder()->batchInsert($table, $rows, $params);
-        return $this->setSql($sql)->bindValues($params);
+        $this->setSql($sql)->bindValues($params)->execute();
+        return $this->pdoStatement->rowCount();
     }
 
     public function update($table, $columns, $condition = [])
     {
         $params = [];
         $sql = $this->db->getQueryBuilder()->update($table, $columns, $condition, $params);
-        return $this->setSql($sql)->bindValues($params);
+        $this->setSql($sql)->bindValues($params)->execute();
+        return $this->pdoStatement->rowCount();
     }
 
     public function delete($table, $condition = [])
     {
         $params = [];
         $sql = $this->db->getQueryBuilder()->delete($table, $condition, $params);
-        return $this->setSql($sql)->bindValues($params);
-    }
-
-    public function execute()
-    {
-        $this->executeSQL();
+        $this->setSql($sql)->bindValues($params)->execute();
         return $this->pdoStatement->rowCount();
     }
 
-    protected function executeSql()
+    protected function execute()
     {
         $start = microtime(true);
         $this->prepare();
@@ -114,7 +112,7 @@ class Command
 
     protected function queryInternal($method, $fetchMode = null)
     {
-        $this->executeSQL();
+        $this->execute();
         if ($fetchMode === null) {
             $fetchMode = $this->fetchMode;
         }

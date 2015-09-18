@@ -77,15 +77,13 @@ class ActiveRecord implements ArrayAccess, JsonSerializable
     public static function updateAll($fields, $condition = [])
     {
         $command = static::getDb()->createCommand();
-        $command->update(static::getTableName(), $fields, $condition);
-        return $command->execute();
+        return $command->update(static::getTableName(), $fields, $condition);
     }
 
     public static function deleteAll($condition = [])
     {
         $command = static::getDb()->createCommand();
-        $command->delete(static::getTableName(), $condition);
-        return $command->execute();
+        return $command->delete(static::getTableName(), $condition);
     }
 
 
@@ -129,8 +127,8 @@ class ActiveRecord implements ArrayAccess, JsonSerializable
             $this->setField($name, $value);
         }
         $values = $this->getDirtyFields();
-        $command = static::getDb()->createCommand()->insert(static::getTableName(), $values);
-        if (!$command->execute()) {
+        $command = static::getDb()->createCommand();
+        if (!$command->insert(static::getTableName(), $values)) {
             return false;
         }
         $schema = static::getTableSchema();
