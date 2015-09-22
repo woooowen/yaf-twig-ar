@@ -58,7 +58,7 @@ class RedisClient {
             }
             $failures = $this->connectFailures;
             $this->connectFailures = 0;
-            throw new Exception("Connection to Redis failed after $failures failures." . (isset($errno) && isset($errstr) ? "Last Error : ({$errno}) {$errstr}" : ""));
+            throw new Exception("Connection to Redis failed after $failures failures.");
         }
 
         $this->connectFailures = 0;
