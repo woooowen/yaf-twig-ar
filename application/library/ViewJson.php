@@ -9,16 +9,26 @@ class ViewJson implements Yaf_View_Interface
 		$this->variables[$name] = $value;
 	}
 
-	public function display($template, $variables = null)
+	public function getScriptPath()
 	{
-		echo $this->render($template, $variables);
+		return '';
 	}
 
-	public function render($template, $variables = null)
+	public function setScriptPath($templateDir)
+	{
+	}
+
+	public function display($tpl, $variables = null)
+	{
+		echo $this->render($tpl, $variables);
+	}
+
+	public function render($tpl, $variables = null)
 	{
 		if (is_array($variables)) {
 			$this->variables = array_merge($this->variables, $variables);
 		}
 		return json_encode($this->variables);
 	}
+
 }
