@@ -1,5 +1,5 @@
 <?php
-class Twig implements Yaf_View_Interface
+class ViewTwig implements Yaf_View_Interface
 {
 	protected $loader;
 	protected $twig;
